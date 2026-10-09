@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #08090C;
+  color: #E2E8F0;
+  overflow-x: hidden;
+}
+
+/* CRT Scanlines Overlay */
+.crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  opacity: 0.75;
+}
+
+/* Stranger Things Benguiat Style Glowing Title */
+.hawkins-title {
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #000;
+  -webkit-text-stroke: 1.5px #E50914;
+  text-shadow: 
+    0 0 10px rgba(229, 9, 20, 0.8),
+    0 0 20px rgba(229, 9, 20, 0.5),
+    0 0 35px rgba(229, 9, 20, 0.3);
+}
+
+.hawkins-title-filled {
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #E50914;
+  text-shadow: 
+    0 0 10px rgba(229, 9, 20, 0.9),
+    0 0 25px rgba(255, 42, 54, 0.6);
+}
+
+/* Glowing borders */
+.border-glow-red {
+  border-color: #E50914;
+  box-shadow: 0 0 15px -3px rgba(229, 9, 20, 0.35);
+}
+
+.border-glow-amber {
+  border-color: #FFB000;
+  box-shadow: 0 0 15px -3px rgba(255, 176, 0, 0.35);
+}
+
+/* Custom retro scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0F1117;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #282D3C;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E50914;
+}
