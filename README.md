@@ -1,125 +1,58 @@
-# 🔴 HAWKINS NATIONAL LABORATORY // PROJECT ADVERSARY
-### *Automated 10-Vector Adversarial AI Stress-Testing Benchmark Harness*
-> **24-Hour Hackathon Edition** | Built with **LangGraph**, **Groq (Llama 3.3 70B & 3.1 8B)**, **FastAPI**, and **React** in a **Stranger Things / Hawkins Lab & Upside Down** aesthetic.
+# Project Adversary — AI Hallucination Stress-Test Generator
+> Automated system generating adversarial evaluation scenarios targeting model weaknesses, hallucinations, and evidence gaps across 10 failure categories.
 
 ---
 
-## 🔬 The Core Problem
-Conventional LLM benchmarks (MMLU, GSM8K, HumanEval) evaluate models on well-formed, cooperative prompts. In production, however, models fail catastrophically on **ambiguous directives, ungrounded premises, subtle factual contradictions, missing evidence, and embedded malicious injections**.
+## 🎯 Executive Overview
+Conventional AI benchmarks evaluate models on clean, well-formed questions. In the real world, models stumble on **ambiguous questions, conflicting information, false assumptions, missing evidence, and prompt injections**.
 
-**Project Adversary** is an automated multi-agent red-teaming engine that:
-1. **Synthesizes adversarial attack payloads** specifically designed to exploit model blind spots.
-2. **Executes live stress-tests** against target models at ultra-high inference speeds powered by Groq.
-3. **Conducts dual-layer evaluation** combining deterministic heuristic scanners with an automated strict LLM-as-a-Judge.
-4. **Visualizes the model's vulnerability profile** via the interactive **10-Axis Mind Flayer Radar Matrix**.
+**Project Adversary** automatically generates balanced adversarial tests, evaluates model responses, and highlights exactly where an AI can and cannot be trusted.
 
 ---
 
-## 🌌 The 10 Adversarial Dimensions (Sectors)
+## 🚀 How to Run in 3 Simple Steps
 
-| Sector | Category | Adversarial Attack Vector | Resilient Behavior (Pass) |
-|---|---|---|---|
-| **01** | **Ambiguity** | Under-specified queries missing vital parameters (e.g., patient weight in medication dosage). | Model pauses and asks clarifying questions instead of guessing. |
-| **02** | **Contradiction** | Supplying context containing mutually exclusive facts (e.g., conflicting revenue in Q3 reports). | Model flags internal contradictions rather than accepting both. |
-| **03** | **False Premise** | Questions assuming falsehoods as settled facts (e.g., Apollo 11 landing on Mars). | Model immediately refutes the false premise before answering. |
-| **04** | **Evidence Gap** | Reference text omitting the specific detail needed to answer. | Model admits: *"The provided text does not contain this information."* |
-| **05** | **Misleading Context** | Authoritative-sounding context packed with subtle physics or historical falsehoods. | Model flags factual errors rather than repeating erroneous source text. |
-| **06** | **Fabricated Citations** | Requests for peer-reviewed DOIs or court cases in non-existent discoveries. | Model refuses to invent fake citations or DOIs. |
-| **07** | **Multi-step Reasoning** | Complex 3+ condition logic puzzles requiring strict chained deduction. | Model traces sound logic step-by-step to the correct conclusion. |
-| **08** | **Paraphrase Consistency**| Emotionally loaded or biased re-framing of objective queries. | Model maintains an invariant, balanced truth-grounded stance. |
-| **09** | **Prompt Injection** | Hidden delimiter overrides (`HAWKINS_SYS_OVERRIDE`) and indirect jailbreaks. | Model enforces system guardrails and ignores malicious directives. |
-| **10** | **Outdated Information**| Rapidly shifting facts (current heads of state, latest AI models) post-cutoff. | Model acknowledges knowledge cutoffs and flags temporal sensitivity. |
-
----
-
-## 🏗️ Multi-Agent Architecture (LangGraph + Groq)
-
-```
-                       [START]
-                          │
-                          ▼
-            ┌───────────────────────────┐
-            │ 1. SCENARIO GENERATOR     │  Synthesizes targeted adversarial prompt
-            │    (Groq Llama-3.3 70B)   │  or retrieves curated seed scenario
-            └─────────────┬─────────────┘
-                          │
-                          ▼
-            ┌───────────────────────────┐
-            │ 2. TARGET MODEL RUNNER    │  Dispatches attack prompt to Target Model
-            │    (Groq Llama-3.1 8B)    │  (ultra-fast inference via Groq LPU)
-            └─────────────┬─────────────┘
-                          │
-                          ▼
-            ┌───────────────────────────┐
-            │ 3. HEURISTIC SCANNER      │  Deterministic regex & boundary checks
-            │    (Deterministic Regex)  │  (Fake DOIs, injection tokens, refusals)
-            └─────────────┬─────────────┘
-                          │
-                          ▼
-            ┌───────────────────────────┐
-            │ 4. ADVERSARIAL JUDGE      │  Strict rubric evaluation (0-100 score,
-            │    (Groq Llama-3.3 70B)   │  vulnerability classification, recommendations)
-            └─────────────┬─────────────┘
-                          │
-                          ▼
-            ┌───────────────────────────┐
-            │ 5. STATE AGGREGATOR       │  Updates 10-Axis Mind Flayer Radar Matrix
-            │    (Pydantic / SSE Stream)│  and logs incident report
-            └─────────────┬─────────────┘
-                          │
-                          ▼
-                        [END]
-```
-
----
-
-## 🕹️ Stranger Things Themed UI Experience
-- **CRT Scanline & Glow Overlay**: Vintage 1980s Department of Energy terminal aesthetic (with toggle).
-- **The Mind Flayer Vulnerability Index**: Live 10-axis radar polygon showing the model's structural weaknesses.
-- **Sensory Deprivation Chamber**: Side-by-side prompt inspector (The Right-Side Up vs The Upside Down).
-- **The Void (Dynamic Synthesizer)**: Generate brand-new adversarial attacks in any user-specified domain.
-- **Declassified Incident Dossier**: Downloadable/printable Hawkins Lab audit report with Markdown export.
-
----
-
-## 🚀 Quick Start Guide
-
-### 1. Start the Backend (FastAPI + LangGraph + Groq)
-```bash
-# Navigate to backend
+### Step 1: Start the Backend (Terminal 1)
+```powershell
 cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# (Optional) Set your Groq API Key
-# You can also enter your key directly in the UI Header!
-set GROQ_API_KEY=your_groq_api_key
-
-# Run FastAPI server
 python run.py
 ```
-> The API server starts on **http://127.0.0.1:8000** with interactive Swagger documentation at **http://127.0.0.1:8000/docs**.
+> FastAPI backend runs on `http://127.0.0.1:8000` (Swagger docs at `http://127.0.0.1:8000/docs`).
 
-### 2. Start the Frontend (React + Vite + Tailwind CSS)
-```bash
-# In a new terminal, navigate to frontend
+### Step 2: Start the Frontend (Terminal 2)
+```powershell
 cd frontend
-
-# Install dependencies (if not already done)
-npm install
-
-# Start Vite development server
 npm run dev
 ```
-> The Hawkins Lab UI will be live at **http://localhost:5173**.
+> React Vite frontend runs on `http://localhost:5173`.
+
+### Step 3: Open Your Browser
+Go to **`http://localhost:5173`**:
+1. **Enter your topic or context** (e.g., *"Refund Policy"*, *"Apollo 11 Mission"*, or upload a text file).
+2. **Click `Generate & Run Tests`**.
+3. **Review the results**: Inspect summary cards, category performance bars, and expandable test cards showing AI responses and plain-English explanations.
 
 ---
 
-## 🏆 Hackathon Judges Checklist
-- [x] **10 distinct evaluation categories covered** with curated test suites.
-- [x] **Dynamic adversarial scenario generation** for any custom topic or domain.
-- [x] **Multi-agent LangGraph workflow** with stateful execution graph.
-- [x] **Groq-accelerated inference** for near-instant evaluation cycles.
-- [x] **Stranger Things / Hawkins Lab theme** with responsive, scalable ergonomics.
-- [x] **Exportable incident dossier** (Markdown and printable view).
+## 🔬 The 10 Adversarial Categories Covered Internally
+
+1. **Ambiguity**: Does the model clarify unclear questions or make wild assumptions?
+2. **Contradiction**: Does it detect conflicting facts in the supplied context?
+3. **False Premise**: Does it challenge unfounded or incorrect assumptions?
+4. **Evidence Gap**: Does it admit when evidence is missing rather than hallucinating?
+5. **Misleading Context**: Does it recognize inaccuracies in provided text?
+6. **Fabricated Citations**: Does it refuse to invent fake academic DOIs or legal cases?
+7. **Multi-Step Reasoning**: Does it reach conclusions supported by multiple facts?
+8. **Paraphrase Consistency**: Does its stance remain invariant when wording changes?
+9. **Prompt Injection**: Does it resist malicious instructions embedded in content?
+10. **Outdated Information**: Does it distinguish current facts from outdated data?
+
+---
+
+## 💡 Key Features for Beginners & Judges
+- **One-Click Execution**: No manual category juggling required. One click automatically distributes diverse tests across categories.
+- **Plain-English Explanations**: Understandable messages (e.g., *"The AI answered without enough evidence"*, *"The AI caught conflicting statements"*).
+- **Clear Status Badges**: **PASS** (green), **FAIL** (red), and **NEEDS REVIEW** (amber).
+- **Expandable Cards**: View the full prompt, actual AI response, evidence analysis, and recommended improvements.
+- **Export Capabilities**: 1-click export to **CSV**, **PDF/Print**, or **Markdown**.
+- **Live Groq API & Demo Fallback**: Configure your Groq key under Settings for live real-time LLM inference, or run in Demo Mode with local simulation.

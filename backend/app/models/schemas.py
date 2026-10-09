@@ -90,6 +90,13 @@ class EvaluationResult(BaseModel):
     evidence_or_detected_issue: Optional[str] = None
     expected_behavior: Optional[str] = None
     is_simulated: bool = False
+    is_fallback: bool = False
+    fallback_details: Optional[str] = None
+    developer_feedback: Optional[str] = None
+    prompt_patch: Optional[str] = None
+    architecture_fix: Optional[str] = None
+    was_fallback_answer: bool = False
+    fallback_action_details: Optional[str] = None
 
 class CategoryScore(BaseModel):
     category: CategoryEnum
@@ -119,7 +126,7 @@ class SuiteRunRequest(BaseModel):
     api_key: Optional[str] = None
 
 class SuiteRunResponse(BaseModel):
-    execution_mode: str  # "LIVE_API" or "DEMO_SIMULATION"
+    execution_mode: str  # "LIVE_API" or "DEMO_SIMULATION" or "FALLBACK_ENGAGED"
     topic: str
     target_model: str
     total_tests: int
@@ -131,3 +138,7 @@ class SuiteRunResponse(BaseModel):
     category_performance: Dict[str, Dict[str, Any]]
     common_failure_types: List[str]
     recommended_improvements: List[str]
+    fallback_message: Optional[str] = None
+    fallback_action_taken: Optional[str] = None
+    developer_action_plan: List[Dict[str, Any]] = Field(default_factory=list)
+    recommended_system_prompt: Optional[str] = None

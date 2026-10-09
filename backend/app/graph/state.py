@@ -24,3 +24,5 @@ class AdversarialGraphState(BaseModel):
     # Step-by-step logs
     execution_logs: List[str] = Field(default_factory=list)
     error: Optional[str] = None
+    was_fallback_answer: bool = False
+    fallback_action_details: Optional[str] = None
