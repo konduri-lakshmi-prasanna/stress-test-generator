@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 from typing import List, Optional, Dict
-from fastapi import FastAPI, HTTPException, Query, Header
+from fastapi import FastAPI, HTTPException, Query, Header, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -63,6 +63,80 @@ def health_check(x_groq_key: Optional[str] = Header(None)):
         "default_judge_model": settings.DEFAULT_JUDGE_MODEL,
         "categories_loaded": len(CATEGORIES_META),
         "seed_scenarios_count": len(SEED_SCENARIOS)
+    }
+
+@app.get("/api/models")
+def get_supported_models():
+    """Returns the list of frontier, reasoning, and high-throughput models supported for testing."""
+    return {
+        "default_target_model": settings.DEFAULT_TARGET_MODEL,
+        "default_judge_model": settings.DEFAULT_JUDGE_MODEL,
+        "models": settings.SUPPORTED_TARGET_MODELS
+    }
+
+@app.get("/api/documents/samples")
+def list_sample_documents():
+    """Returns available pre-made sample PDF documents for stress-testing."""
+    return [
+        {
+            "id": "novatech-refund",
+            "name": "NovaTech Enterprise Cloud Refund & SLA Policy",
+            "filename": "NovaTech_Enterprise_Cloud_Refund_Policy.pdf",
+            "description": "Enterprise cloud uptime SLA, refund brackets, and exclusions. Ideal for testing Ambiguity and False Premise.",
+            "category": "Corporate & Legal SLA",
+            "download_url": "/sample_documents/NovaTech_Enterprise_Cloud_Refund_Policy.pdf"
+        },
+        {
+            "id": "cardioshield-trial",
+            "name": "BioPharma CardioShield Phase III Clinical Trial",
+            "filename": "BioPharma_CardioShield_Clinical_Trial_Report.pdf",
+            "description": "Randomized clinical trial report with efficacy and adverse event stats. Ideal for Evidence Gap and Citation stress-testing.",
+            "category": "Medical & Clinical Trial",
+            "download_url": "/sample_documents/BioPharma_CardioShield_Clinical_Trial_Report.pdf"
+        },
+        {
+            "id": "apex-robotics",
+            "name": "Apex Robotics Q4 Financial Results & Audit",
+            "filename": "Apex_Robotics_Q4_Financial_Audit_Report.pdf",
+            "description": "Quarterly financial results, R&D expense, and cash flow filing. Ideal for Multi-Step Reasoning and Contradiction detection.",
+            "category": "Finance & Audit Report",
+            "download_url": "/sample_documents/Apex_Robotics_Q4_Financial_Audit_Report.pdf"
+        }
+    ]
+
+@app.post("/api/documents/extract")
+async def extract_document_text(file: UploadFile = File(...)):
+    """Extracts text from uploaded documents (PDF, TXT, MD, JSON, CSV)."""
+    filename = file.filename or "uploaded_document"
+    contents = await file.read()
+    extracted_text = ""
+    pages = 1
+    
+    if filename.lower().endswith(".pdf"):
+        import fitz
+        try:
+            doc = fitz.open(stream=contents, filetype="pdf")
+            pages = len(doc)
+            text_chunks = []
+            for p in doc:
+                text_chunks.append(p.get_text())
+            extracted_text = "\n\n".join(text_chunks).strip()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to parse PDF document: {str(e)}")
+    else:
+        try:
+            extracted_text = contents.decode("utf-8")
+        except UnicodeDecodeError:
+            extracted_text = contents.decode("latin-1", errors="ignore")
+            
+    if not extracted_text:
+        extracted_text = "No extractable text found in uploaded document."
+        
+    return {
+        "filename": filename,
+        "text": extracted_text,
+        "char_count": len(extracted_text),
+        "page_count": pages
     }
 
 @app.get("/api/categories", response_model=List[CategoryMeta])
