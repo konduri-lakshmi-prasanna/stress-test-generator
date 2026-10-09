@@ -12,6 +12,8 @@ export type CategoryId =
 
 export type ThreatLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UPSIDE_DOWN';
 
+export type TestStatus = 'PASS' | 'FAIL' | 'NEEDS_REVIEW';
+
 export interface CategoryMeta {
   id: CategoryId;
   name: string;
@@ -59,6 +61,12 @@ export interface EvaluationResult {
   heuristic_results: HeuristicCheckResult;
   recommendation: string;
   timestamp: string;
+  // User-friendly beginner fields
+  status: TestStatus;
+  plain_explanation?: string | null;
+  evidence_or_detected_issue?: string | null;
+  expected_behavior?: string | null;
+  is_simulated?: boolean;
 }
 
 export interface CategoryScore {
@@ -66,6 +74,7 @@ export interface CategoryScore {
   name: string;
   passed_count: number;
   failed_count: number;
+  needs_review_count?: number;
   total_tests: number;
   avg_score: number;
   threat_status: string;
@@ -77,7 +86,39 @@ export interface BenchmarkReport {
   total_tests: number;
   passed_tests: number;
   failed_tests: number;
+  needs_review_tests?: number;
   categories: Record<string, CategoryScore>;
   recent_evaluations: EvaluationResult[];
   hawkins_status: string;
+}
+
+export interface SuiteRunRequest {
+  topic_or_context: string;
+  target_model?: string;
+  test_count?: number;
+  api_key?: string;
+}
+
+export interface CategoryPerformanceItem {
+  name: string;
+  total: number;
+  passed: number;
+  failed: number;
+  needs_review: number;
+  score: number;
+}
+
+export interface SuiteRunResponse {
+  execution_mode: 'LIVE_API' | 'DEMO_SIMULATION';
+  topic: string;
+  target_model: string;
+  total_tests: number;
+  passed_tests: number;
+  failed_tests: number;
+  needs_review_tests: number;
+  reliability_score: number;
+  results: EvaluationResult[];
+  category_performance: Record<string, CategoryPerformanceItem>;
+  common_failure_types: string[];
+  recommended_improvements: string[];
 }
