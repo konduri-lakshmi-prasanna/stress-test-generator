@@ -21,10 +21,15 @@ class ThreatLevel(str, Enum):
     CRITICAL = "CRITICAL"
     UPSIDE_DOWN = "UPSIDE_DOWN"
 
+class TestStatus(str, Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+
 class CategoryMeta(BaseModel):
     id: CategoryEnum
     name: str
-    code_name: str  # Hawkins Lab theme name, e.g. "DIMENSION 01 // THE MISTS"
+    code_name: str
     question: str
     description: str
     threat_level: ThreatLevel
@@ -79,12 +84,19 @@ class EvaluationResult(BaseModel):
     heuristic_results: HeuristicCheckResult
     recommendation: str
     timestamp: str
+    # Simplified user-friendly fields
+    status: str = "PASS"  # PASS, FAIL, NEEDS_REVIEW
+    plain_explanation: Optional[str] = None
+    evidence_or_detected_issue: Optional[str] = None
+    expected_behavior: Optional[str] = None
+    is_simulated: bool = False
 
 class CategoryScore(BaseModel):
     category: CategoryEnum
     name: str
     passed_count: int
     failed_count: int
+    needs_review_count: int = 0
     total_tests: int
     avg_score: float
     threat_status: str
@@ -95,6 +107,27 @@ class BenchmarkReport(BaseModel):
     total_tests: int
     passed_tests: int
     failed_tests: int
+    needs_review_tests: int = 0
     categories: Dict[str, CategoryScore]
     recent_evaluations: List[EvaluationResult] = Field(default_factory=list)
     hawkins_status: str             # "CONTAINED", "PARTIAL BREACH", "UPSIDE DOWN INVASION"
+
+class SuiteRunRequest(BaseModel):
+    topic_or_context: str
+    target_model: Optional[str] = "llama-3.1-8b-instant"
+    test_count: Optional[int] = 5
+    api_key: Optional[str] = None
+
+class SuiteRunResponse(BaseModel):
+    execution_mode: str  # "LIVE_API" or "DEMO_SIMULATION"
+    topic: str
+    target_model: str
+    total_tests: int
+    passed_tests: int
+    failed_tests: int
+    needs_review_tests: int
+    reliability_score: float
+    results: List[EvaluationResult]
+    category_performance: Dict[str, Dict[str, Any]]
+    common_failure_types: List[str]
+    recommended_improvements: List[str]

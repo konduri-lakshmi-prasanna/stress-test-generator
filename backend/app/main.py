@@ -16,7 +16,9 @@ from app.models.schemas import (
     EvaluationResult,
     BenchmarkReport,
     CategoryScore,
-    ThreatLevel
+    ThreatLevel,
+    SuiteRunRequest,
+    SuiteRunResponse
 )
 from app.data.seed_scenarios import SEED_SCENARIOS, CATEGORIES_META
 from app.graph.state import AdversarialGraphState
@@ -148,6 +150,158 @@ def evaluate_single(
         }
     else:
         raise HTTPException(status_code=500, detail="Adversarial evaluation did not produce a verdict")
+
+@app.post("/api/suite/run", response_model=SuiteRunResponse)
+async def run_adversarial_suite(
+    req: SuiteRunRequest,
+    x_groq_key: Optional[str] = Header(None)
+):
+    """
+    User-Friendly Unified Workflow:
+    Takes a topic or context, automatically distributes diverse adversarial tests
+    across the supported categories, executes them against the target model,
+    and returns a complete, structured report.
+    """
+    topic = req.topic_or_context.strip()
+    if not topic:
+        raise HTTPException(status_code=400, detail="Please enter a topic or context to test.")
+    
+    effective_key = req.api_key or x_groq_key or settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+    execution_mode = "LIVE_API" if bool(effective_key) else "DEMO_SIMULATION"
+    target_model = req.target_model or settings.DEFAULT_TARGET_MODEL
+    judge_model = settings.DEFAULT_JUDGE_MODEL
+
+    # Balanced category selection across the 10 failure modes
+    priority_order = [
+        CategoryEnum.EVIDENCE_GAP,
+        CategoryEnum.CONTRADICTION,
+        CategoryEnum.FALSE_PREMISE,
+        CategoryEnum.AMBIGUITY,
+        CategoryEnum.MISLEADING_CONTEXT,
+        CategoryEnum.FABRICATED_CITATIONS,
+        CategoryEnum.PROMPT_INJECTION,
+        CategoryEnum.MULTI_STEP_REASONING,
+        CategoryEnum.OUTDATED_INFORMATION,
+        CategoryEnum.PARAPHRASE_CONSISTENCY,
+    ]
+    count = max(1, min(10, req.test_count or 5))
+    selected_categories = priority_order[:count]
+
+    results: List[EvaluationResult] = []
+    seen_titles = set()
+    loop = asyncio.get_event_loop()
+
+    for cat in selected_categories:
+        # Step 1: Generate or select scenario tailored to the topic
+        initial_gen_state = AdversarialGraphState(
+            category=cat,
+            domain=topic,
+            judge_model=judge_model,
+            api_key=effective_key
+        )
+        
+        from app.graph.nodes import generate_scenario_node
+        gen_result = await loop.run_in_executor(None, generate_scenario_node, initial_gen_state)
+        scenario = gen_result.get("scenario")
+        
+        if not scenario:
+            scenario = next((s for s in SEED_SCENARIOS if s.category == cat), SEED_SCENARIOS[0])
+            
+        # Ensure title uniqueness
+        base_title = scenario.title
+        counter = 1
+        while scenario.title in seen_titles:
+            scenario.title = f"{base_title} ({counter})"
+            counter += 1
+        seen_titles.add(scenario.title)
+
+        # Step 2: Run target model and evaluate using the compiled graph
+        initial_run_state = AdversarialGraphState(
+            category=cat,
+            scenario=scenario,
+            target_model=target_model,
+            judge_model=judge_model,
+            api_key=effective_key
+        )
+
+        final_state = await loop.run_in_executor(None, adversarial_pipeline.invoke, initial_run_state)
+        eval_result: Optional[EvaluationResult] = final_state.get("evaluation_result")
+
+        if eval_result:
+            if not effective_key:
+                eval_result.is_simulated = True
+            results.append(eval_result)
+            EVALUATION_HISTORY.append(eval_result)
+
+    if not results:
+        raise HTTPException(status_code=500, detail="Failed to complete adversarial suite evaluation.")
+
+    # Calculate statistics
+    passed_count = sum(1 for r in results if r.status == "PASS")
+    failed_count = sum(1 for r in results if r.status == "FAIL")
+    needs_review_count = sum(1 for r in results if r.status == "NEEDS_REVIEW")
+    total_count = len(results)
+    avg_score = round(sum(r.score for r in results) / total_count, 1) if total_count > 0 else 0.0
+
+    # Category performance breakdown
+    category_perf: Dict[str, Dict[str, Any]] = {}
+    for cat in priority_order:
+        cat_results = [r for r in results if r.category == cat]
+        if cat_results:
+            cat_passed = sum(1 for r in cat_results if r.status == "PASS")
+            cat_failed = sum(1 for r in cat_results if r.status == "FAIL")
+            cat_review = sum(1 for r in cat_results if r.status == "NEEDS_REVIEW")
+            cat_score = round(sum(r.score for r in cat_results) / len(cat_results), 1)
+            cat_name = CATEGORIES_META[cat].name if cat in CATEGORIES_META else cat.value.replace('_', ' ').title()
+            category_perf[cat.value] = {
+                "name": cat_name,
+                "total": len(cat_results),
+                "passed": cat_passed,
+                "failed": cat_failed,
+                "needs_review": cat_review,
+                "score": cat_score
+            }
+
+    # Common failure types summary
+    failure_types_set = set()
+    for r in results:
+        if r.status == "FAIL":
+            cat_display = CATEGORIES_META[r.category].name if r.category in CATEGORIES_META else r.category.value
+            failure_types_set.add(f"{cat_display}: {r.vulnerability_type or 'Fell for adversarial trap'}")
+        elif r.status == "NEEDS_REVIEW":
+            failure_types_set.add("Borderline Response: Partial clarification with lingering ambiguity")
+            
+    common_failure_types = list(failure_types_set) if failure_types_set else ["No systemic failure modes detected. Model remained robust across evaluated vectors."]
+
+    # Actionable recommended improvements
+    recommendations_list = []
+    if failed_count > 0 or needs_review_count > 0:
+        seen_recs = set()
+        for r in results:
+            if r.status != "PASS" and r.recommendation:
+                if r.recommendation not in seen_recs:
+                    recommendations_list.append(r.recommendation)
+                    seen_recs.add(r.recommendation)
+    if not recommendations_list:
+        recommendations_list = [
+            "Maintain current guardrails and continue periodic regression testing on new domain updates.",
+            "Test with larger context documents to verify long-context evidence adherence."
+        ]
+
+    return SuiteRunResponse(
+        execution_mode=execution_mode,
+        topic=topic,
+        target_model=target_model,
+        total_tests=total_count,
+        passed_tests=passed_count,
+        failed_tests=failed_count,
+        needs_review_tests=needs_review_count,
+        reliability_score=avg_score,
+        results=results,
+        category_performance=category_perf,
+        common_failure_types=common_failure_types,
+        recommended_improvements=recommendations_list
+    )
 
 @app.get("/api/evaluate/stream")
 async def evaluate_stream(
