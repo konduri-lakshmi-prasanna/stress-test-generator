@@ -67,6 +67,13 @@ export interface EvaluationResult {
   evidence_or_detected_issue?: string | null;
   expected_behavior?: string | null;
   is_simulated?: boolean;
+  is_fallback?: boolean;
+  fallback_details?: string | null;
+  developer_feedback?: string | null;
+  prompt_patch?: string | null;
+  architecture_fix?: string | null;
+  was_fallback_answer?: boolean;
+  fallback_action_details?: string | null;
 }
 
 export interface CategoryScore {
@@ -108,8 +115,16 @@ export interface CategoryPerformanceItem {
   score: number;
 }
 
+export interface DeveloperActionItem {
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  category: string;
+  issue: string;
+  action: string;
+  prompt_fix: string;
+}
+
 export interface SuiteRunResponse {
-  execution_mode: 'LIVE_API' | 'DEMO_SIMULATION';
+  execution_mode: 'LIVE_API' | 'DEMO_SIMULATION' | 'FALLBACK_ENGAGED';
   topic: string;
   target_model: string;
   total_tests: number;
@@ -121,6 +136,32 @@ export interface SuiteRunResponse {
   category_performance: Record<string, CategoryPerformanceItem>;
   common_failure_types: string[];
   recommended_improvements: string[];
+  fallback_message?: string | null;
+  fallback_action_taken?: string | null;
+  developer_action_plan?: DeveloperActionItem[];
+  recommended_system_prompt?: string | null;
+}
+
+export type ToastType = 'success' | 'info' | 'warning' | 'error' | 'fallback';
+
+export interface ToastNotification {
+  id: string;
+  type: ToastType;
+  title: string;
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  timestamp: string;
+  duration?: number;
+}
+
+export interface ActionFeedbackLog {
+  id: string;
+  actionName: string;
+  status: 'SUCCESS' | 'FALLBACK_ENGAGED' | 'WARNING';
+  timestamp: string;
+  details: string;
+  fallbackActionTaken?: string;
 }
 
 export interface TargetModelInfo {

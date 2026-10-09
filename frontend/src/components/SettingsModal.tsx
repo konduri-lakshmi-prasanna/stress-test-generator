@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Key, X, Check, ExternalLink, ShieldCheck, Trash2 } from 'lucide-react';
 import { getApiKey, setApiKey } from '../services/api';
+import { ToastType } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onKeyUpdated: () => void;
+  onFeedback?: (title: string, message: string, type?: ToastType) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
-  onKeyUpdated
+  onKeyUpdated,
+  onFeedback
 }) => {
   const [keyInput, setKeyInput] = useState('');
   const [showKey, setShowKey] = useState(false);
@@ -27,9 +30,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   const handleSave = () => {
-    setApiKey(keyInput.trim());
+    const trimmed = keyInput.trim();
+    setApiKey(trimmed);
     onKeyUpdated();
     setSavedSuccess(true);
+    if (trimmed) {
+      onFeedback?.(
+        "API Credentials Updated",
+        "Groq API key saved successfully. Live LPU hardware inference activated.",
+        "success"
+      );
+    } else {
+      onFeedback?.(
+        "API Key Cleared",
+        "Reverted to Hawkins Demo Simulation Mode.",
+        "info"
+      );
+    }
     setTimeout(() => {
       onClose();
     }, 600);
@@ -39,6 +56,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setApiKey('');
     setKeyInput('');
     onKeyUpdated();
+    onFeedback?.(
+      "API Key Removed",
+      "API credentials cleared. Reverted to Demo Simulation Mode.",
+      "info"
+    );
   };
 
   return (

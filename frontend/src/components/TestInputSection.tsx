@@ -1,18 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Play, Sparkles, Loader2, FileText, CheckCircle2, Cpu, Zap, Download, FileSpreadsheet } from 'lucide-react';
-import { AVAILABLE_TARGET_MODELS } from '../types';
+import { AVAILABLE_TARGET_MODELS, ToastType } from '../types';
 import { extractDocumentText, fetchSampleDocuments, SampleDocInfo } from '../services/api';
 
 interface TestInputSectionProps {
   onRunSuite: (topic: string, targetModel: string, testCount: number) => void;
   isLoading: boolean;
   loadingStep?: string;
+  onActionFeedback?: (title: string, message: string, type?: ToastType, actionLabel?: string, onAction?: () => void) => void;
 }
 
 export const TestInputSection: React.FC<TestInputSectionProps> = ({
   onRunSuite,
   isLoading,
-  loadingStep = "Synthesizing test scenarios..."
+  loadingStep = "Synthesizing test scenarios...",
+  onActionFeedback
 }) => {
   const [inputText, setInputText] = useState('Customer Refund & Return Policy');
   const [targetModel, setTargetModel] = useState('llama-3.1-8b-instant');
@@ -48,19 +50,33 @@ export const TestInputSection: React.FC<TestInputSectionProps> = ({
         const result = await extractDocumentText(file);
         setInputText(result.text);
         setUploadedFileName(`${file.name} (${result.page_count} pg, ${result.char_count} chars)`);
+        onActionFeedback?.(
+          "Document Extracted Successfully",
+          `Extracted text from "${file.name}" (${result.page_count} page(s), ${result.char_count} characters). Ready for testing.`,
+          "success"
+        );
       } else {
         const reader = new FileReader();
         reader.onload = (event) => {
           const content = event.target?.result as string;
           if (content) {
             setInputText(content.trim());
+            onActionFeedback?.(
+              "Document Uploaded",
+              `Loaded "${file.name}" (${content.length} characters) into test chamber.`,
+              "success"
+            );
           }
         };
         reader.readAsText(file);
       }
     } catch (err: any) {
       console.error("Document extraction error:", err);
-      alert("Failed to extract document text: " + (err.message || "Unknown error"));
+      onActionFeedback?.(
+        "Expected Result Could Not Be Produced",
+        "Failed to extract document text: " + (err.message || "Unknown error"),
+        "error"
+      );
     } finally {
       setIsExtractingDoc(false);
       if (fileInputRef.current) {
@@ -78,8 +94,18 @@ export const TestInputSection: React.FC<TestInputSectionProps> = ({
       const result = await extractDocumentText(file);
       setInputText(result.text);
       setUploadedFileName(`${doc.filename} (${result.page_count} pg, ${result.char_count} chars)`);
+      onActionFeedback?.(
+        "Sample Document Loaded",
+        `Inserted "${doc.name}" into test chamber.`,
+        "info"
+      );
     } catch (err: any) {
       console.error("Failed to load sample PDF:", err);
+      onActionFeedback?.(
+        "Expected Result Could Not Be Produced",
+        "Unable to fetch sample PDF: " + (err.message || "Unknown error"),
+        "error"
+      );
     } finally {
       setIsExtractingDoc(false);
     }
@@ -87,8 +113,29 @@ export const TestInputSection: React.FC<TestInputSectionProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || isLoading) return;
-    onRunSuite(inputText.trim(), targetModel, testCount);
+    if (isLoading) return;
+
+    const trimmed = inputText.trim();
+    if (!trimmed || trimmed.length < 15) {
+      // Constraint Card 09: Fallback message and action when expected result cannot be produced
+      onActionFeedback?.(
+        "Expected Result Could Not Be Produced",
+        "The input is too short to synthesize multi-vector tests. Click below to auto-load the Phase III Clinical Trial document.",
+        "fallback",
+        "Auto-load Clinical Trial PDF",
+        () => {
+          if (sampleDocs.length > 1) {
+            handleLoadSamplePdf(sampleDocs[1]);
+          } else {
+            setInputText(sampleTopics[2].text);
+            setUploadedFileName(null);
+          }
+        }
+      );
+      return;
+    }
+
+    onRunSuite(trimmed, targetModel, testCount);
   };
 
   return (

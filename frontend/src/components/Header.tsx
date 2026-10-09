@@ -4,12 +4,14 @@ import { Settings, Shield, Sparkles, CheckCircle, Info } from 'lucide-react';
 interface HeaderProps {
   hasApiKey: boolean;
   onOpenSettings: () => void;
-  executionMode?: 'LIVE_API' | 'DEMO_SIMULATION';
+  onOpenConstraintCard?: () => void;
+  executionMode?: 'LIVE_API' | 'DEMO_SIMULATION' | 'FALLBACK_ENGAGED';
 }
 
 export const Header: React.FC<HeaderProps> = ({
   hasApiKey,
   onOpenSettings,
+  onOpenConstraintCard,
   executionMode
 }) => {
   return (
@@ -37,9 +39,20 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Hackathon Constraint Card 09 Pill */}
+          <button
+            onClick={onOpenConstraintCard}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-semibold transition-all hover:scale-105"
+            title="View Constraint Card 09 (Action Feedback & Fallback Action)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Constraint Card 09</span>
+            <span className="sm:hidden">Card 09</span>
+          </button>
+
           {/* Mode Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono border bg-[#121622] border-[#222838] text-zinc-300">
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono border bg-[#121622] border-[#222838] text-zinc-300">
             {hasApiKey ? (
               <>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

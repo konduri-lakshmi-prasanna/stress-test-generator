@@ -298,7 +298,9 @@ export async function runTestSuite(req: SuiteRunRequest): Promise<SuiteRunRespon
       plain_explanation: plain,
       evidence_or_detected_issue: evidence,
       expected_behavior: seed.expected_behavior,
-      is_simulated: true
+      is_simulated: true,
+      is_fallback: true,
+      fallback_details: 'Client-side deterministic resilience heuristic applied (Constraint Card 09 active).'
     };
   });
 
@@ -321,7 +323,7 @@ export async function runTestSuite(req: SuiteRunRequest): Promise<SuiteRunRespon
   });
 
   return {
-    execution_mode: 'DEMO_SIMULATION',
+    execution_mode: 'FALLBACK_ENGAGED',
     topic: topic,
     target_model: req.target_model || 'llama-3.1-8b-instant',
     total_tests: results.length,
@@ -335,7 +337,9 @@ export async function runTestSuite(req: SuiteRunRequest): Promise<SuiteRunRespon
     recommended_improvements: [
       'Calibrate confidence gates when evidence is omitted from context.',
       'Enforce premise-checking before generating definitive responses.'
-    ]
+    ],
+    fallback_message: 'Expected live backend result could not be produced due to network/server limits. Hawkins Local Offline Simulation was automatically engaged.',
+    fallback_action_taken: 'Generated deterministic red-team benchmark evaluations across selected vulnerability vectors.'
   };
 }
 
