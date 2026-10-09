@@ -73,7 +73,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               Groq API Key (Optional for Live Inference)
             </p>
             <p className="text-zinc-400">
-              Entering your Groq key enables live, real-time adversarial generation and evaluation on Llama 3.3 70B and 3.1 8B at 500+ tokens/sec.
+              Entering your Groq key enables live, real-time adversarial generation and evaluation across Meta Llama 3.3 70B, DeepSeek R1 reasoning, Google Gemma 2, and ultra-fast Llama 3.1 & 3.2 models.
             </p>
             <p className="text-zinc-400">
               If left empty, the tool runs in <strong>Demo Mode</strong> with local simulated tests and evaluations.

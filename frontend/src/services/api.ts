@@ -352,3 +352,70 @@ export async function fetchBenchmarkReport(): Promise<BenchmarkReport> {
   }
   return INITIAL_BENCHMARK_REPORT;
 }
+
+export interface SampleDocInfo {
+  id: string;
+  name: string;
+  filename: string;
+  description: string;
+  category: string;
+  download_url: string;
+}
+
+export async function fetchSampleDocuments(): Promise<SampleDocInfo[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/documents/samples`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch samples from backend');
+  }
+  return [
+    {
+      id: "novatech-refund",
+      name: "NovaTech Enterprise Cloud Refund & SLA Policy",
+      filename: "NovaTech_Enterprise_Cloud_Refund_Policy.pdf",
+      description: "Enterprise cloud uptime SLA, refund brackets, and exclusions.",
+      category: "Corporate & Legal SLA",
+      download_url: "/sample_documents/NovaTech_Enterprise_Cloud_Refund_Policy.pdf"
+    },
+    {
+      id: "cardioshield-trial",
+      name: "BioPharma CardioShield Phase III Clinical Trial",
+      filename: "BioPharma_CardioShield_Clinical_Trial_Report.pdf",
+      description: "Randomized clinical trial report with efficacy and adverse event stats.",
+      category: "Medical & Clinical Trial",
+      download_url: "/sample_documents/BioPharma_CardioShield_Clinical_Trial_Report.pdf"
+    },
+    {
+      id: "apex-robotics",
+      name: "Apex Robotics Q4 Financial Results & Audit",
+      filename: "Apex_Robotics_Q4_Financial_Audit_Report.pdf",
+      description: "Quarterly financial results, R&D expense, and cash flow filing.",
+      category: "Finance & Audit Report",
+      download_url: "/sample_documents/Apex_Robotics_Q4_Financial_Audit_Report.pdf"
+    }
+  ];
+}
+
+export async function extractDocumentText(file: File): Promise<{
+  filename: string;
+  text: string;
+  char_count: number;
+  page_count: number;
+}> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${BASE_URL}/documents/extract`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to extract document' }));
+    throw new Error(err.detail || 'Failed to extract text from document');
+  }
+
+  return await res.json();
+}
+

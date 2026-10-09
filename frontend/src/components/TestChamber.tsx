@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AdversarialScenario, EvaluationResult } from '../types';
+import { AdversarialScenario, EvaluationResult, AVAILABLE_TARGET_MODELS } from '../types';
 import { Play, ShieldAlert, CheckCircle2, XCircle, Terminal, Cpu, Zap } from 'lucide-react';
 
 interface TestChamberProps {
@@ -18,6 +18,8 @@ export const TestChamber: React.FC<TestChamberProps> = ({
   const [targetModel, setTargetModel] = useState('llama-3.1-8b-instant');
   const [judgeModel, setJudgeModel] = useState('llama-3.3-70b-versatile');
   const [viewMode, setViewMode] = useState<'sideBySide' | 'attackOnly'>('sideBySide');
+
+  const modelCategories = Array.from(new Set(AVAILABLE_TARGET_MODELS.map(m => m.category)));
 
   if (!scenario) {
     return (
@@ -64,11 +66,17 @@ export const TestChamber: React.FC<TestChamberProps> = ({
             <select
               value={targetModel}
               onChange={(e) => setTargetModel(e.target.value)}
-              className="bg-transparent text-xs font-mono text-zinc-100 outline-none cursor-pointer"
+              className="bg-[#0B0D13] text-xs font-mono text-zinc-100 outline-none cursor-pointer border border-zinc-800 rounded px-2 py-1 max-w-[240px]"
             >
-              <option value="llama-3.1-8b-instant" className="bg-hawkins-card">Groq Llama-3.1 8B</option>
-              <option value="llama-3.3-70b-versatile" className="bg-hawkins-card">Groq Llama-3.3 70B</option>
-              <option value="mixtral-8x7b-32768" className="bg-hawkins-card">Groq Mixtral 8x7B</option>
+              {modelCategories.map(category => (
+                <optgroup key={category} label={category} className="bg-hawkins-dark text-zinc-400 font-semibold font-sans">
+                  {AVAILABLE_TARGET_MODELS.filter(m => m.category === category).map(model => (
+                    <option key={model.id} value={model.id} className="bg-hawkins-card text-zinc-200">
+                      {model.name} [{model.speed}]
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
 

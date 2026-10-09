@@ -122,3 +122,95 @@ export interface SuiteRunResponse {
   common_failure_types: string[];
   recommended_improvements: string[];
 }
+
+export interface TargetModelInfo {
+  id: string;
+  name: string;
+  category: 'Groq Cloud (LPU)' | 'OpenAI' | 'Google DeepMind' | 'Anthropic';
+  provider: string;
+  speed: string;
+  context: string;
+  description: string;
+}
+
+export const AVAILABLE_TARGET_MODELS: TargetModelInfo[] = [
+  // 1. Groq Cloud (Exactly 2 models as requested)
+  {
+    id: 'llama-3.3-70b-versatile',
+    name: 'Groq Llama-3.3 70B (Frontier)',
+    category: 'Groq Cloud (LPU)',
+    provider: 'Groq',
+    speed: '280 t/s',
+    context: '128k',
+    description: 'Meta flagship frontier open-weight model hosted on Groq high-speed LPUs.'
+  },
+  {
+    id: 'llama-3.1-8b-instant',
+    name: 'Groq Llama-3.1 8B (Fast)',
+    category: 'Groq Cloud (LPU)',
+    provider: 'Groq',
+    speed: '800+ t/s',
+    context: '128k',
+    description: 'Blazing-fast 8B parameter model running natively on Groq LPUs.'
+  },
+
+  // 2. OpenAI
+  {
+    id: 'gpt-4o',
+    name: 'OpenAI GPT-4o (Omni Flagship)',
+    category: 'OpenAI',
+    provider: 'OpenAI',
+    speed: 'High Precision',
+    context: '128k',
+    description: 'OpenAI premier omni-modal foundation model with advanced reasoning.'
+  },
+  {
+    id: 'gpt-4o-mini',
+    name: 'OpenAI GPT-4o Mini (Fast)',
+    category: 'OpenAI',
+    provider: 'OpenAI',
+    speed: 'Fast Efficient',
+    context: '128k',
+    description: 'Lightweight, affordable high-speed OpenAI model for daily tasks.'
+  },
+
+  // 3. Google DeepMind
+  {
+    id: 'gemini-1.5-pro',
+    name: 'Google Gemini 1.5 Pro',
+    category: 'Google DeepMind',
+    provider: 'Google DeepMind',
+    speed: 'Deep Context',
+    context: '1M tokens',
+    description: 'Google frontier multimodal model with breakthrough million-token context window.'
+  },
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Google Gemini 1.5 Flash',
+    category: 'Google DeepMind',
+    provider: 'Google DeepMind',
+    speed: 'Ultra Fast',
+    context: '1M tokens',
+    description: 'Optimized high-frequency model from Google for speed and efficiency.'
+  },
+
+  // 4. Anthropic
+  {
+    id: 'claude-3-5-sonnet',
+    name: 'Anthropic Claude 3.5 Sonnet',
+    category: 'Anthropic',
+    provider: 'Anthropic',
+    speed: 'Nuanced Reasoning',
+    context: '200k',
+    description: 'Anthropic industry-leading frontier model for nuanced comprehension and coding.'
+  },
+  {
+    id: 'claude-3-haiku',
+    name: 'Anthropic Claude 3 Haiku',
+    category: 'Anthropic',
+    provider: 'Anthropic',
+    speed: 'Fast Lightweight',
+    context: '200k',
+    description: 'Compact high-speed intelligence model from Anthropic.'
+  }
+];
